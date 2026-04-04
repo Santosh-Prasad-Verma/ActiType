@@ -104,7 +104,7 @@ The extension uses multiple content scripts for different purposes:
 
 ## 🔄 Version History
 
-### v1.x
+### v1
 - Initial release with basic functionality
 - Smart paste with simple typing simulation
 - Basic always-active window feature
