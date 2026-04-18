@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ActiType</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="logo">ActiType</h1>
+            <p class="tagline">Smart Test Assistant</p>
+            <div id="statusMessage" class="status-message hidden"></div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-target="settings-view">Settings</button>
+            <button class="tab-btn" data-target="shortcuts-view">Shortcuts</button>
+        </nav>
+
+        <!-- Dynamic Content Area -->
+        <main class="content-area">
+
+            <!-- Settings View -->
+            <section id="settings-view" class="view-panel active">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>AI Configuration</h2>
+                        <p class="subtitle">Connect your preferred AI provider to unlock smart features.</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="aiProvider">Provider</label>
+                        <select id="aiProvider" class="input-control">
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic (Claude)</option>
+                            <option value="google">Google Gemini</option>
+                            <option value="deepseek">DeepSeek</option>
+                            <option value="custom">Custom Provider</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group hidden" id="customEndpointGroup">
+                        <label for="customEndpoint">Custom API Endpoint</label>
+                        <input type="text" id="customEndpoint" class="input-control" placeholder="https://api.example.com/v1/chat">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="apiKey">API Key</label>
+                        <input type="password" id="apiKey" class="input-control" placeholder="Enter your secret key">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modelName">Model Override (Optional)</label>
+                        <input type="text" id="modelName" class="input-control" placeholder="e.g. gpt-4o, claude-3-5-sonnet">
+                    </div>
+
+                    <button id="testConnectionBtn" class="primary-btn">Test Connection</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header align-row">
+                        <div class="header-text">
+                            <h2>Toast Opacity</h2>
+                            <p class="subtitle">Shortcut: <kbd class="inline-shortcut" id="opacityShortcutDisplay">Alt + O</kbd></p>
+                        </div>
+                        <button id="toastOpacityBtn" class="secondary-btn compact-btn">
+                            <span id="opacityLevel">High</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card danger-zone">
+                    <button id="uninstallBtn" class="danger-btn">Uninstall Extension</button>
+                </div>
+            </section>
+
+            <!-- Shortcuts View -->
+            <section id="shortcuts-view" class="view-panel">
+                <div class="shortcuts-group">
+                    <h3>Universal Actions</h3>
+                    <ul class="shortcut-list">
+                        <li>
+                            <div class="shortcut-details">
+                                <span class="shortcut-title">Search Answers Using AI</span>
+                                <span class="badge warning">Select Question First</span>
+                            </div>
+                            <kbd class="os-shortcut" data-key="Option + Shift + S">Alt + Shift + S</kbd>
+                        </li>
+                        <li>
+                            <div class="shortcut-details">
+                                <span class="shortcut-title">Solve MCQs Using AI</span>
+                                <span class="badge warning">Select Question First</span>
+                            </div>
+                            <kbd class="os-shortcut" data-key="Option + Shift + M">Alt + Shift + M</kbd>
+                        </li>
+                        <li>
+                            <div class="shortcut-details">
+                                <span class="shortcut-title">Toggle Chatbot</span>
+                            </div>
+                            <kbd class="os-shortcut" data-key="Option + C">Alt + C</kbd>
+                        </li>
+                        <li>
+                            <div class="shortcut-details">
+                                <span class="shortcut-title">Paste (Bypass Blockers)</span>
+                            </div>
+                            <kbd class="os-shortcut" data-key="Option + Shift + V">Alt + Shift + V</kbd>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="shortcuts-group">
+                    <h3>Examly / Iamneo</h3>
+                    <ul class="shortcut-list">
+                        <li>
+                            <div class="shortcut-details">
+                                <span class="shortcut-title">Type Coding Answers</span>
+                            </div>
+                            <kbd class="os-shortcut" data-key="Control + Shift + T">Ctrl + Shift + T</kbd>
+                        </li>
+                        <li>
+                            <div class="shortcut-details">
+                                <span class="shortcut-title">Search Neo Answers Using AI</span>
+                            </div>
+                            <kbd class="os-shortcut" data-key="Option + Shift + A">Alt + Shift + A</kbd>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="shortcuts-group">
+                    <h3>HackerRank</h3>
+                    <ul class="shortcut-list">
+                        <li>
+                            <div class="shortcut-details">
+                                <span class="shortcut-title">Solve Questions</span>
+                                <span class="badge beta">BETA</span>
+                            </div>
+                            <kbd class="os-shortcut" data-key="Control + Shift + H">Ctrl + Shift + H</kbd>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="shortcuts-group">
+                    <h3>NPTEL</h3>
+                    <ul class="shortcut-list">
+                        <li>
+                            <div class="shortcut-details">
+                                <span class="shortcut-title">Solve NPTEL MCQs</span>
+                                <span class="badge warning">Select Question First</span>
+                            </div>
+                            <kbd class="os-shortcut" data-key="Option + Shift + N">Alt + Shift + N</kbd>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
