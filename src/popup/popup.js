@@ -147,6 +147,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (toastOpacityBtn) {
         toastOpacityBtn.addEventListener('click', () => {
             chrome.runtime.sendMessage({ action: 'toggleToastOpacity' }, (response) => {
+                if (chrome.runtime.lastError) {
+                    console.warn("Background communication failed:", chrome.runtime.lastError.message);
+                    return;
+                }
                 if (response?.success) {
                     opacityLevelDisplay.textContent = capitalize(response.level);
                     showMessage(`HUD Visibility: ${capitalize(response.level)}`);

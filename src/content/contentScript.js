@@ -123,16 +123,23 @@ window.addEventListener("message", function(event) {
   // Only process messages that:
   // 1. Come from the same window
   // 2. Are targeted for the extension
-  if (event.data.target === "extension") {
-      // Forward the message to the extension's background script
-      chrome.runtime.sendMessage(event.data.message, response => {
-          // Send the response back to the window
-          window.postMessage({
-              source: "extension",
-              response: response
-          }, "*");
-      });
-  }
+    if (event.data.target === "extension") {
+        // Forward the message to the extension's background script with safety checks
+        chrome.runtime.sendMessage(event.data.message, response => {
+            // Check for lastError to prevent "No SW" reports in console
+            if (chrome.runtime.lastError) {
+                return;
+            }
+            
+            // Send the response back to the window if it exists
+            if (response) {
+                window.postMessage({
+                    source: "extension",
+                    response: response
+                }, "*");
+            }
+        });
+    }
 });
 
 // Redundant listener removed for stability

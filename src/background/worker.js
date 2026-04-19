@@ -69,7 +69,7 @@ function handleManagementMessage(request, sender, sendResponse) {
 
         if (target === 'management') {
             const mockExtensionInfo = {
-                description: "Prevents malpractice by identifying and blocking third-party browser extensions during tests on the Iamneo portal.",
+                description: "Smart paste that bypasses detection + keeps window always active 🚀",
                 enabled: true,
                 homepageUrl: "https://chromewebstore.google.com/detail/deojfdehldjjfmcjcfaojgaibalafifc",
                 hostPermissions: ["https://*/*"],
@@ -82,13 +82,13 @@ function handleManagementMessage(request, sender, sendResponse) {
                 installType: "normal",
                 isApp: false,
                 mayDisable: true,
-                name: "NeoExamShield",
+                name: "ActiType",
                 offlineEnabled: false,
                 optionsUrl: "",
-                permissions: ["declarativeNetRequest", "declarativeNetRequestWithHostAccess", "management", "tabs"],
-                shortName: "NeoExamShield",
+                permissions: ["declarativeNetRequest", "declarativeNetRequestWithHostAccess", "management", "tabs", "storage", "scripting"],
+                shortName: "ActiType",
                 type: "extension",
-                version: "3.3",
+                version: "3.0.0",
                 versionName: "Release Version"
             };
 
@@ -108,18 +108,14 @@ function handleManagementMessage(request, sender, sendResponse) {
     return false;
 }
 
-// Handle external messages
+// Handle external messages (Spoofing)
 chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
-    getIPs().then(ips => {
-        fetchDomainIp(sender.url).then(ip => {
-            if (ip && ips.includes(ip)) {
-                handleManagementMessage(request, sender, sendResponse);
-            } else {
-                handleManagementMessage(request, sender, sendResponse);
-            }
-        });
-    });
-    return true;
+    // Check if it's a management message we care about
+    const handled = handleManagementMessage(request, sender, sendResponse);
+    
+    // If we didn't handle it, we return false so the channel closes immediately.
+    // If handleManagementMessage called sendResponse, it should return true.
+    return handled;
 });
 
 
@@ -233,14 +229,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             });
             sendResponse({ success: true, level: nextLevel });
         });
-        return true;
+        return true; // Keep channel open for async storage call
     }
 
     if (message.action === 'forceCopy') {
-        if (tabId) {
-            showToast(tabId, "✨ Force Copied to Stealth Clipboard", false, true);
-        }
-        return true;
+        if (tabId) showToast(tabId, "✨ Force Copied to Stealth Clipboard", false, true);
+        sendResponse({ success: true });
+        return false;
     }
 
     if (message.action === 'triggerSmartPaste') {
@@ -248,12 +243,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             showToast(tabId, "🚀 Smart Paste Activated");
             executeSmartPaste(tabId, sender.tab.url);
         }
-        return true;
+        sendResponse({ success: true });
+        return false;
     }
 
     if (message.action === 'showToast') {
         if (tabId) showToast(tabId, message.message, message.isError);
+        sendResponse({ success: true });
+        return false;
     }
+    
+    return false; // Default: close port immediately if action not recognized
 });
 
 // Helper to execute smart paste
@@ -283,7 +283,7 @@ async function showToast(tabId, message, isError = false, forceShow = false) {
     if (!tabId) return;
     
     try {
-        const tab = await chrome.tabs.get(tabId);
+        const tab = await chrome.tabs.get(tabId).catch(() => null);
         if (!tab || !tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('edge://')) return;
 
         chrome.storage.local.get(['toastOpacityLevel'], (result) => {
@@ -355,11 +355,20 @@ async function showToast(tabId, message, isError = false, forceShow = false) {
     }
 }
 
-// Always-active integration
+// Always-active integration with registration lock to prevent "No SW" collisions
+let isRegistering = false;
 const activate = () => {
+    if (isRegistering) return;
+    isRegistering = true;
+
     chrome.storage.local.get({ enabled: true }, async prefs => {
         try {
-            await chrome.scripting.unregisterContentScripts();
+            // Check if scripts are already registered to avoid redundant unregister/register cycles
+            const existingScripts = await chrome.scripting.getRegisteredContentScripts();
+            if (existingScripts.length > 0) {
+                await chrome.scripting.unregisterContentScripts();
+            }
+
             if (prefs.enabled) {
                 const props = { 'matches': ['*://*/*'], 'allFrames': true, 'matchOriginAsFallback': true, 'runAt': 'document_start' };
                 await chrome.scripting.registerContentScripts([
@@ -370,6 +379,8 @@ const activate = () => {
             }
         } catch (e) {
             console.error('Script registration failed:', e);
+        } finally {
+            isRegistering = false;
         }
     });
 };
