@@ -83,7 +83,9 @@ document.addEventListener('keydown', (event) => {
         console.log("ActiType: Smart Paste Triggered");
         event.preventDefault();
         event.stopPropagation();
-        chrome.runtime.sendMessage({ action: 'triggerSmartPaste' });
+        chrome.runtime.sendMessage({ action: 'triggerSmartPaste' }, () => {
+            if (chrome.runtime.lastError) { /* Silent ignore background busy */ }
+        });
     }
     
     // Alt + C: Force Copy
@@ -94,7 +96,9 @@ document.addEventListener('keydown', (event) => {
             event.preventDefault();
             event.stopPropagation();
             window.neoPassClipboard = selectedText;
-            chrome.runtime.sendMessage({ action: 'forceCopy', text: selectedText });
+            chrome.runtime.sendMessage({ action: 'forceCopy', text: selectedText }, () => {
+                if (chrome.runtime.lastError) { /* Silent ignore background busy */ }
+            });
         }
     }
 
@@ -103,6 +107,8 @@ document.addEventListener('keydown', (event) => {
         console.log("ActiType: Opacity Toggle Triggered");
         event.preventDefault();
         event.stopPropagation();
-        chrome.runtime.sendMessage({ action: 'toggleToastOpacity' });
+        chrome.runtime.sendMessage({ action: 'toggleToastOpacity' }, () => {
+            if (chrome.runtime.lastError) { /* Silent ignore background busy */ }
+        });
     }
 }, true);
