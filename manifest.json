@@ -1,59 +1,57 @@
 {
   "manifest_version": 3,
   "name": "ActiType",
-  "version": "2.0",
+  "version": "3.0.0",
   "description": "Smart paste that bypasses detection + keeps window always active to prevent test interruptions.",
   "background": {
     "service_worker": "src/background/worker.js"
   },
-"web_accessible_resources": [{
-    "resources": [
-        "src/devtools/devtools.js",
+  "web_accessible_resources": [
+    {
+      "resources": [
         "data/inject/anti-anti-debug.js",
         "data/inject/copyOverride.js",
         "data/inject/customPaste.js",
         "data/inject/mock_code.js",
-        "data/inject/exam.js",
-        "data/lib/showdown.min.js",
-        "metadata.json",
-        "src/content/contentScript.js",
-        "manifest.json",
-        "data/inject/mock_code/mock_manifest.json",
-        "data/inject/mock_code/minifiedBackground.js",
-        "data/inject/mock_code/minifiedContent-script.js",
-        "data/inject/mock_code/rules.json"
-    ],
-    "matches": ["http://*/*", "https://*/*"]
-}],
+        "data/inject/ss-stealth.js",
+        "data/inject/main.js"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
+    }
+  ],
   "permissions": [
     "management",
     "tabs",
     "activeTab",
-    "contextMenus",   
+    "contextMenus",
     "clipboardWrite",
     "clipboardRead",
     "storage",
     "scripting",
-    "downloads",
     "windows",
     "declarativeNetRequest",
     "declarativeNetRequestWithHostAccess",
-    "alarms",
-    "webRequest"
+    "alarms"
   ],
   "host_permissions": [
-      "*://*/*"
+    "*://*/*"
   ],
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyXKMSllCpa1zHLw0m7CbO1iAsi0iwQ5Ij45LbZsuvVnmmL0ahjrv+Rfbks1gZ2rE3nqJCvbyT9VUNMGlW9a09BTlRzrm9RhqaAdN6Mg4Y1fEdwQ6fB/UZG5eGEHKUmilxZrkfgfqVwPauLyIYBxTTyIJcYBQvg4mY1WutMpliP2Xbyva2f+t8iiXDer1lvqprNSbFv15bkwz6G5TJxTmvfK/yWKZUqPuI14WPyeo4KO5OA6+5aXONWw6S62n0D8LbadlkQMJM/Tn24tKAjSST0WpIViOn/rNOd/p1lTlrtXD9NkF3jDLblo+H0UwuItl+qhZd2why9tuejHGKWnS/wIDAQAB",
   "externally_connectable": {
-     "matches": ["http://*/*", "https://*/*"]
-   },
+    "matches": [
+      "http://*/*",
+      "https://*/*"
+    ]
+  },
   "action": {
     "default_popup": "src/popup/popup.html",
     "default_icon": {
-      "16": "images/icon16.png",
-      "48": "images/icon48.png",
-      "128": "images/icon128.png"
+      "16": "images/ActiType.png",
+      "48": "images/ActiType.png",
+      "128": "images/ActiType.png"
     }
   },
   "content_scripts": [
@@ -68,9 +66,6 @@
         "data/inject/rightclickmenu.js",
         "data/inject/isolated.js",
         "data/inject/content.js",
-        "data/inject/main.js",
-        "data/inject/chatbot.js",
-        "data/lib/showdown.min.js",
         "src/content/contentScript.js"
       ],
       "exclude_matches": [
@@ -80,16 +75,18 @@
     },
     {
       "matches": [
-          "<all_urls>"
+        "<all_urls>"
       ],
       "all_frames": true,
       "run_at": "document_start",
       "js": [
-          "src/devtools/devtools.js"
+        "src/devtools/devtools.js"
       ]
     },
     {
-      "js": ["data/inject/anti-anti-debug.js"],
+      "js": [
+        "data/inject/anti-anti-debug.js"
+      ],
       "run_at": "document_start",
       "all_frames": true,
       "matchOriginAsFallback": true,
@@ -99,67 +96,71 @@
       ]
     },
     {
-      "js": ["data/inject/screenshare-bridge.js"],
+      "js": [
+        "data/inject/ss-bridge.js"
+      ],
       "run_at": "document_start",
       "all_frames": true,
       "matchOriginAsFallback": true,
       "matches": [
-        "<all_urls>",
-        "https://*.examly.io/*",
-        "https://*.vit.ac.in/*",
-        "https://app.codility.com/*"
-      ],
-      "exclude_matches": ["https://*.examly.io/result*","https://*.vit.ac.in/result"]
+        "<all_urls>"
+      ]
     },
     {
-      "js": ["data/inject/screenshare.js"],
+      "js": [
+        "data/inject/ss-stealth.js"
+      ],
       "run_at": "document_start",
       "all_frames": true,
       "matchOriginAsFallback": true,
       "world": "MAIN",
       "matches": [
-        "<all_urls>",
-        "https://*.examly.io/*",
-        "https://*.vit.ac.in/*",
-        "https://app.codility.com/*"
-      ],
-      "exclude_matches": ["https://*.examly.io/result*","https://*.vit.ac.in/result"]
+        "<all_urls>"
+      ]
+    },
+    {
+      "js": ["data/inject/main.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "matchOriginAsFallback": true,
+      "world": "MAIN",
+      "matches": ["https://*/*", "http://*/*"],
+      "exclude_matches": ["*://*.discord.com/*", "*://*.figma.com/*"]
     }
   ],
   "commands": {
-    "search-mcq": {
+    "triggerSmartPaste": {
       "suggested_key": {
-        "default": "Alt+Shift+M",
-        "mac": "Alt+Shift+M"
+        "default": "Alt+D",
+        "mac": "Alt+D"
       },
-      "description": "Solve MCQs"
+      "description": "Smart Paste"
     },
-    "search": {
+    "toggleHUD": {
       "suggested_key": {
-        "default": "Alt+Shift+S",
-        "mac": "Alt+Shift+S"
+        "default": "Alt+O",
+        "mac": "Alt+O"
       },
-      "description": "Solve MCQs"
-    },
-    "nptel": {
-      "suggested_key": {
-        "default": "Alt+Shift+N",
-        "mac": "Alt+Shift+N"
-      },
-      "description": "nptel"
+      "description": "Toggle HUD Visibility"
     },
     "customPaste": {
       "suggested_key": {
         "default": "Alt+Shift+V",
         "mac": "Alt+Shift+V"
       },
-      "description": "Paste using drag-and-drop when blocked"
+      "description": "Paste Menu"
+    },
+    "forceCopy": {
+      "suggested_key": {
+        "default": "Alt+C",
+        "mac": "Alt+C"
+      },
+      "description": "Force Copy (Smart Copy)"
     }
   },
   "icons": {
-    "16": "images/icon16.png",
-    "48": "images/icon48.png",
-    "128": "images/icon128.png"
-  },
-  "version_name": "Release Version"
+    "16": "images/ActiType.png",
+    "48": "images/ActiType.png",
+    "128": "images/ActiType.png"
+  }
 }

@@ -1,164 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ActiType</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="popup.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ActiType Ghost v3.0</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
-    <div class="app-container">
-        <!-- Header -->
-        <header class="app-header">
-            <h1 class="logo">ActiType</h1>
-            <p class="tagline">Smart Test Assistant</p>
-            <div id="statusMessage" class="status-message hidden"></div>
-        </header>
+<body class="ghost-theme">
+  <div class="app-container">
+    <!-- Header -->
+    <header class="main-header glass">
+      <div class="logo-area">
+        <img src="../../images/ActiType.png" alt="Logo" class="app-logo">
+        <div class="brand-text">
+          <span class="brand-name">ActiType</span>
+          <span class="brand-version">GHOST v3.0</span>
+        </div>
+      </div>
+      <div class="status-indicator">
+        <div class="pulse-ring"></div>
+        <span class="status-text">STEALTH ACTIVE</span>
+      </div>
+    </header>
 
-        <!-- Navigation -->
-        <nav class="nav-tabs">
-            <button class="tab-btn active" data-target="settings-view">Settings</button>
-            <button class="tab-btn" data-target="shortcuts-view">Shortcuts</button>
-        </nav>
+    <!-- Navigation -->
+    <nav class="tab-nav glass">
+      <button class="tab-btn active" data-target="dashboard">
+        <span>Dashboard</span>
+      </button>
+      <button class="tab-btn" data-target="shortcuts">
+        <span>Shortcuts</span>
+      </button>
+      <button class="tab-btn" data-target="info">
+        <span>About</span>
+      </button>
+      <div class="nav-underline"></div>
+    </nav>
 
-        <!-- Dynamic Content Area -->
-        <main class="content-area">
+    <!-- Content Area -->
+    <main class="content-scroll">
+      
+      <!-- Dashboard View -->
+      <section id="dashboard" class="view-panel active">
+        <div class="module-grid">
+          
+          <!-- Screen Share Card -->
+          <div class="module-card glass" id="ssStealthBtn">
+            <div class="card-icon ss-icon">
+              <div class="monitor-shape"></div>
+            </div>
+            <div class="card-content">
+              <h3>Screen Stealth</h3>
+              <p id="ssModeDesc" class="feature-status">Loading...</p>
+            </div>
+            <div id="ssModeDisplay" class="mode-badge">MODAL</div>
+          </div>
 
-            <!-- Settings View -->
-            <section id="settings-view" class="view-panel active">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>AI Configuration</h2>
-                        <p class="subtitle">Connect your preferred AI provider to unlock smart features.</p>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="aiProvider">Provider</label>
-                        <select id="aiProvider" class="input-control">
-                            <option value="openai">OpenAI</option>
-                            <option value="anthropic">Anthropic (Claude)</option>
-                            <option value="google">Google Gemini</option>
-                            <option value="deepseek">DeepSeek</option>
-                            <option value="custom">Custom Provider</option>
-                        </select>
-                    </div>
+          <!-- Webcam Card -->
+          <div class="module-card glass" id="webcamStealthBtn">
+            <div class="card-icon webcam-icon">
+              <div class="lens-shape"></div>
+            </div>
+            <div class="card-content">
+              <h3>Camera Mask</h3>
+              <p id="webcamModeDesc" class="feature-status">Loading...</p>
+            </div>
+            <div id="webcamModeDisplay" class="mode-badge cyan">OFF</div>
+          </div>
 
-                    <div class="form-group hidden" id="customEndpointGroup">
-                        <label for="customEndpoint">Custom API Endpoint</label>
-                        <input type="text" id="customEndpoint" class="input-control" placeholder="https://api.example.com/v1/chat">
-                    </div>
+          <!-- Timer Card -->
+          <div class="module-card glass" id="timerControlBtn">
+            <div class="card-icon timer-icon">
+              <div class="clock-shape"></div>
+            </div>
+            <div class="card-content">
+              <h3>Clock Warp</h3>
+              <p id="timerModeDesc" class="feature-status">Loading...</p>
+            </div>
+            <div id="timerModeDisplay" class="mode-badge warning">OFF</div>
+          </div>
 
-                    <div class="form-group">
-                        <label for="apiKey">API Key</label>
-                        <input type="password" id="apiKey" class="input-control" placeholder="Enter your secret key">
-                    </div>
+          <!-- Quick Actions -->
+          <div class="actions-row">
+            <button class="action-card glass" id="toastOpacityBtn">
+              <span class="action-icon">👁️</span>
+              <div class="action-text">
+                <span class="action-label">HUD Visibility</span>
+                <span id="opacityLevel" class="action-value">High</span>
+              </div>
+            </button>
+          </div>
 
-                    <div class="form-group">
-                        <label for="modelName">Model Override (Optional)</label>
-                        <input type="text" id="modelName" class="input-control" placeholder="e.g. gpt-4o, claude-3-5-sonnet">
-                    </div>
+        </div>
+      </section>
 
-                    <button id="testConnectionBtn" class="primary-btn">Test Connection</button>
-                </div>
+      <!-- Shortcuts View -->
+      <section id="shortcuts" class="view-panel">
+        <div class="shortcut-list">
+          <div class="shortcut-item glass">
+            <span class="shortcut-label">Smart Paste</span>
+            <kbd class="shortcut-key"><span class="os-shortcut" data-key="Alt + D">Alt + D</span></kbd>
+          </div>
+          <div class="shortcut-item glass">
+            <span class="shortcut-label">Adjust Visibility</span>
+            <kbd class="shortcut-key"><span class="os-shortcut" data-key="Alt + O">Alt + O</span></kbd>
+          </div>
+          <div class="shortcut-item glass">
+            <span class="shortcut-label">Paste Menu</span>
+            <kbd class="shortcut-key"><span class="os-shortcut" data-key="Alt+Shift+V">Alt+Shift+V</span></kbd>
+          </div>
+        </div>
+      </section>
 
-                <div class="card">
-                    <div class="card-header align-row">
-                        <div class="header-text">
-                            <h2>Toast Opacity</h2>
-                            <p class="subtitle">Shortcut: <kbd class="inline-shortcut" id="opacityShortcutDisplay">Alt + O</kbd></p>
-                        </div>
-                        <button id="toastOpacityBtn" class="secondary-btn compact-btn">
-                            <span id="opacityLevel">High</span>
-                        </button>
-                    </div>
-                </div>
+      <!-- Info View -->
+      <section id="info" class="view-panel">
+        <div class="about-card glass">
+          <p class="about-desc">ActiType Ghost is designed for high-stakes environments where privacy and detection bypass are critical.</p>
+          <div class="about-stats">
+            <div class="stat-item">
+              <span class="stat-value">v3.0.0</span>
+              <span class="stat-label">Build</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">Stable</span>
+              <span class="stat-label">Engine</span>
+            </div>
+          </div>
+          <button id="uninstallBtn" class="danger-btn">System Purge (Uninstall)</button>
+        </div>
+      </section>
 
-                <div class="card danger-zone">
-                    <button id="uninstallBtn" class="danger-btn">Uninstall Extension</button>
-                </div>
-            </section>
+    </main>
 
-            <!-- Shortcuts View -->
-            <section id="shortcuts-view" class="view-panel">
-                <div class="shortcuts-group">
-                    <h3>Universal Actions</h3>
-                    <ul class="shortcut-list">
-                        <li>
-                            <div class="shortcut-details">
-                                <span class="shortcut-title">Search Answers Using AI</span>
-                                <span class="badge warning">Select Question First</span>
-                            </div>
-                            <kbd class="os-shortcut" data-key="Option + Shift + S">Alt + Shift + S</kbd>
-                        </li>
-                        <li>
-                            <div class="shortcut-details">
-                                <span class="shortcut-title">Solve MCQs Using AI</span>
-                                <span class="badge warning">Select Question First</span>
-                            </div>
-                            <kbd class="os-shortcut" data-key="Option + Shift + M">Alt + Shift + M</kbd>
-                        </li>
-                        <li>
-                            <div class="shortcut-details">
-                                <span class="shortcut-title">Toggle Chatbot</span>
-                            </div>
-                            <kbd class="os-shortcut" data-key="Option + C">Alt + C</kbd>
-                        </li>
-                        <li>
-                            <div class="shortcut-details">
-                                <span class="shortcut-title">Paste (Bypass Blockers)</span>
-                            </div>
-                            <kbd class="os-shortcut" data-key="Option + Shift + V">Alt + Shift + V</kbd>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="shortcuts-group">
-                    <h3>Examly / Iamneo</h3>
-                    <ul class="shortcut-list">
-                        <li>
-                            <div class="shortcut-details">
-                                <span class="shortcut-title">Type Coding Answers</span>
-                            </div>
-                            <kbd class="os-shortcut" data-key="Control + Shift + T">Ctrl + Shift + T</kbd>
-                        </li>
-                        <li>
-                            <div class="shortcut-details">
-                                <span class="shortcut-title">Search Neo Answers Using AI</span>
-                            </div>
-                            <kbd class="os-shortcut" data-key="Option + Shift + A">Alt + Shift + A</kbd>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="shortcuts-group">
-                    <h3>HackerRank</h3>
-                    <ul class="shortcut-list">
-                        <li>
-                            <div class="shortcut-details">
-                                <span class="shortcut-title">Solve Questions</span>
-                                <span class="badge beta">BETA</span>
-                            </div>
-                            <kbd class="os-shortcut" data-key="Control + Shift + H">Ctrl + Shift + H</kbd>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="shortcuts-group">
-                    <h3>NPTEL</h3>
-                    <ul class="shortcut-list">
-                        <li>
-                            <div class="shortcut-details">
-                                <span class="shortcut-title">Solve NPTEL MCQs</span>
-                                <span class="badge warning">Select Question First</span>
-                            </div>
-                            <kbd class="os-shortcut" data-key="Option + Shift + N">Alt + Shift + N</kbd>
-                        </li>
-                    </ul>
-                </div>
-            </section>
-        </main>
+    <!-- Footer Toast -->
+    <div id="statusMessage" class="status-message hidden glass">
+      Settings Updated
     </div>
-    <script src="popup.js"></script>
+  </div>
+
+  <script src="popup.js"></script>
 </body>
 </html>

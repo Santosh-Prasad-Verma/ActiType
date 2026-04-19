@@ -18,10 +18,6 @@ if (typeof chrome === "undefined") {
   (document.head || document.documentElement).prepend(mockScript);
 })();
 
-// Inject exam.js (no login required)
-const script = document.createElement('script');
-script.src = chrome.runtime.getURL('data/inject/exam.js');
-(document.head || document.documentElement).appendChild(script);
 
 // Login prompt and status sync removed - extension features now available to all users
 
@@ -139,16 +135,8 @@ window.addEventListener("message", function(event) {
   }
 });
 
-window.addEventListener("message", function (event) {
+// Redundant listener removed for stability
 
-  if (event.source === window && event.data.target === "extension") {
-
-    browser.runtime.sendMessage(event.data.message, (response) => {
-
-      window.postMessage({ source: "extension", response: response }, "*");
-    });
-  }
-});
 
 // Listen for the 'beforeunload' event to remove any injected elements
 window.addEventListener("beforeunload", removeInjectedElement);

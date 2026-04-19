@@ -2,70 +2,34 @@ document.addEventListener('DOMContentLoaded', function () {
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0 || 
                   navigator.userAgent.toUpperCase().indexOf('MAC') >= 0;
 
+    // Elements
     const statusMessage = document.getElementById('statusMessage');
     const toastOpacityBtn = document.getElementById('toastOpacityBtn');
-    const opacityLevelDisplay = document.getElementById('opacityLevel');
-    const opacityShortcutDisplay = document.getElementById('opacityShortcutDisplay');
-    const uninstallBtn = document.getElementById('uninstallBtn');
+    const ssStealthBtn = document.getElementById('ssStealthBtn');
+    const webcamStealthBtn = document.getElementById('webcamStealthBtn');
+    const timerControlBtn = document.getElementById('timerControlBtn');
     
-    // API Configuration elements
-    const aiProviderSelect = document.getElementById('aiProvider');
-    const customEndpointGroup = document.getElementById('customEndpointGroup');
-    const customEndpointInput = document.getElementById('customEndpoint');
-    const apiKeyInput = document.getElementById('apiKey');
-    const modelNameInput = document.getElementById('modelName');
-    const testConnectionBtn = document.getElementById('testConnectionBtn');
-
-    // Debounced auto-save function for API configuration
-    let saveTimeout;
-    function autoSaveAPIConfig() {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(async () => {
-            const apiKey = apiKeyInput?.value?.trim();
-            const aiProvider = aiProviderSelect?.value;
-            const customEndpoint = customEndpointInput?.value?.trim();
-            const modelName = modelNameInput?.value?.trim();
-            
-            if (apiKey) {
-                try {
-                    await chrome.storage.local.set({
-                        useCustomAPI: true,
-                        aiProvider: aiProvider,
-                        customEndpoint: customEndpoint,
-                        customAPIKey: apiKey,
-                        customModelName: modelName
-                    });
-                    console.log('API configuration auto-saved');
-                    showMessage('Saved successfully', 'success', 1500);
-                } catch (error) {
-                    console.error('Error auto-saving API configuration:', error);
-                    showMessage('Failed to save', 'error', 2000);
-                }
-            }
-        }, 1000);
-    }
-
-    // Function to clear chat history when provider changes
-    function clearChatHistoryOnProviderChange() {
-        try {
-            chrome.tabs.query({}, function(tabs) {
-                tabs.forEach(tab => {
-                    try {
-                        chrome.tabs.sendMessage(tab.id, {
-                            action: 'clearChatHistory',
-                            reason: 'providerChange'
-                        }).catch(() => {});
-                    } catch (error) {}
-                });
-            });
-        } catch (error) {
-            console.error('Error clearing chat history:', error);
-        }
-    }
-
-    // Tab Navigation
+    const opacityLevelDisplay = document.getElementById('opacityLevel');
+    const ssModeDisplay = document.getElementById('ssModeDisplay');
+    const ssModeDesc = document.getElementById('ssModeDesc');
+    const webcamModeDisplay = document.getElementById('webcamModeDisplay');
+    const webcamModeDesc = document.getElementById('webcamModeDesc');
+    const timerModeDisplay = document.getElementById('timerModeDisplay');
+    const timerModeDesc = document.getElementById('timerModeDesc');
+    
+    const uninstallBtn = document.getElementById('uninstallBtn');
+    const navUnderline = document.querySelector('.nav-underline');
     const tabBtns = document.querySelectorAll('.tab-btn');
     const viewPanels = document.querySelectorAll('.view-panel');
+
+    // --- Tab Navigation ---
+    function updateNavUnderline(activeTab) {
+        if (!navUnderline) return;
+        const width = activeTab.offsetWidth;
+        const left = activeTab.offsetLeft;
+        navUnderline.style.width = `${width}px`;
+        navUnderline.style.left = `${left}px`;
+    }
 
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -74,179 +38,171 @@ document.addEventListener('DOMContentLoaded', function () {
             
             btn.classList.add('active');
             const targetId = btn.getAttribute('data-target');
-            document.getElementById(targetId).classList.add('active');
+            const targetPanel = document.getElementById(targetId);
+            if (targetPanel) targetPanel.classList.add('active');
+            
+            updateNavUnderline(btn);
         });
     });
 
-    // Helper Functions
-    function showMessage(message, type = 'success', duration = 3000) {
+    // Initialize underline
+    setTimeout(() => {
+        const activeTab = document.querySelector('.tab-btn.active');
+        if (activeTab) updateNavUnderline(activeTab);
+    }, 50);
+
+    // --- Helper Functions ---
+    function showMessage(message, type = 'success') {
         statusMessage.textContent = message;
-        statusMessage.className = `status-message ${type}`;
+        statusMessage.className = `status-message glass ${type}`;
         statusMessage.classList.remove('hidden');
         
         setTimeout(() => {
             statusMessage.classList.add('hidden');
-        }, duration);
+        }, 2500);
     }
 
-    function capitalizeFirstLetter(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
     }
 
-    function updateShortcutsForPlatform() {
-        // Adjust display for Mac vs PC
-        if (opacityShortcutDisplay) {
-            opacityShortcutDisplay.textContent = isMac ? 'Option + O' : 'Alt + O';
-        }
-
+    // --- Shortcuts Localization ---
+    function localizeShortcuts() {
         document.querySelectorAll('.os-shortcut').forEach(el => {
             const rawKey = el.getAttribute('data-key');
             if (!rawKey) return;
             
+            let localized = rawKey;
             if (isMac) {
-                let macKey = rawKey.replace('Alt', 'Option')
-                                   .replace('Control', 'Control') // Mac often retains physical Ctrl for some things, but usually it translates. ActiType previous mappings kept 'Control' for Mac.
-                                   .replace('Ctrl', 'Control');
-                el.textContent = macKey;
+                localized = rawKey.replace('Alt', 'Option').replace('Ctrl', 'Control');
             } else {
-                let winKey = rawKey.replace('Option', 'Alt')
-                                   .replace('Control', 'Ctrl');
-                el.textContent = winKey;
+                localized = rawKey.replace('Option', 'Alt').replace('Control', 'Ctrl');
             }
+            el.textContent = localized;
         });
     }
 
-    // Initialize Opacity Level
-    function initializeOpacityLevel() {
-        chrome.storage.local.get(['toastOpacityLevel'], (result) => {
-            if (result.toastOpacityLevel) {
-                opacityLevelDisplay.textContent = capitalizeFirstLetter(result.toastOpacityLevel);
-            } else {
-                opacityLevelDisplay.textContent = 'High';
+    // --- State Management ---
+    const ssModeNames = { 'OFF': 'Disabled', 'MANUAL': 'Manual', 'BLOCK': 'Block All', 'AUTO_BLANK': 'Blank Feed' };
+    const ssModeDescs = {
+        'OFF': 'Standard behavior.',
+        'MANUAL': 'Prompt for setiap request.',
+        'BLOCK': 'Auto-reject sharing.',
+        'AUTO_BLANK': 'Feeds a black screen.'
+    };
+
+    const webcamModeNames = { 'OFF': 'Disabled', 'BLOCK': 'Block All', 'STATIC': 'Dark Room', 'FREEZE': 'Freeze' };
+    const webcamModeDescs = {
+        'OFF': 'Standard behavior.',
+        'BLOCK': 'Prevent webcam access.',
+        'STATIC': 'Virtual dark-room feed.',
+        'FREEZE': 'Loop last frame.'
+    };
+
+    const timerModeNames = { 'OFF': 'Disabled', 'SLOW': '3× Slower', 'PAUSE': 'Paused' };
+    const timerModeDescs = {
+        'OFF': 'Normal clock speed.',
+        'SLOW': 'Timers run significantly slower.',
+        'PAUSE': 'New timers are frozen.'
+    };
+
+    function updateUI() {
+        chrome.storage.local.get({
+            toastOpacityLevel: 'high',
+            ssStealthMode: 'MANUAL',
+            webcamStealthMode: 'OFF',
+            timerMode: 'OFF'
+        }, (prefs) => {
+            // Opacity
+            if (opacityLevelDisplay) opacityLevelDisplay.textContent = capitalize(prefs.toastOpacityLevel);
+            
+            // Screen Share
+            if (ssModeDisplay) {
+                ssModeDisplay.textContent = ssModeNames[prefs.ssStealthMode] || prefs.ssStealthMode;
+                ssModeDisplay.className = `mode-badge ${prefs.ssStealthMode === 'OFF' ? '' : 'active'}`;
             }
+            if (ssModeDesc) ssModeDesc.textContent = ssModeDescs[prefs.ssStealthMode] || '';
+
+            // Webcam
+            if (webcamModeDisplay) {
+                webcamModeDisplay.textContent = webcamModeNames[prefs.webcamStealthMode] || prefs.webcamStealthMode;
+                webcamModeDisplay.className = `mode-badge cyan ${prefs.webcamStealthMode === 'OFF' ? '' : 'active'}`;
+            }
+            if (webcamModeDesc) webcamModeDesc.textContent = webcamModeDescs[prefs.webcamStealthMode] || '';
+
+            // Timer
+            if (timerModeDisplay) {
+                timerModeDisplay.textContent = timerModeNames[prefs.timerMode] || prefs.timerMode;
+                timerModeDisplay.className = `mode-badge warning ${prefs.timerMode === 'OFF' ? '' : 'active'}`;
+            }
+            if (timerModeDesc) timerModeDesc.textContent = timerModeDescs[prefs.timerMode] || '';
         });
     }
 
-    // Load saved API configuration
-    function loadAPIConfiguration() {
-        chrome.storage.local.get([
-            'aiProvider',
-            'customEndpoint',
-            'customAPIKey',
-            'customModelName'
-        ], (result) => {
-            if (result.aiProvider && aiProviderSelect) {
-                aiProviderSelect.value = result.aiProvider;
-                if (result.aiProvider === 'custom') {
-                    customEndpointGroup.classList.remove('hidden');
-                } else {
-                    customEndpointGroup.classList.add('hidden');
-                }
-            } else {
-                if(customEndpointGroup) customEndpointGroup.classList.add('hidden');
-            }
-            if (result.customEndpoint && customEndpointInput) {
-                customEndpointInput.value = result.customEndpoint;
-            }
-            if (result.customAPIKey && apiKeyInput) {
-                apiKeyInput.value = result.customAPIKey;
-            }
-            if (result.customModelName && modelNameInput) {
-                modelNameInput.value = result.customModelName;
-            }
-        });
-    }
+    // --- Initial Sync ---
+    updateUI();
+    localizeShortcuts();
 
-    // Init
-    loadAPIConfiguration();
-    initializeOpacityLevel();
-    updateShortcutsForPlatform();
-
-    window.addEventListener('offline', () => {
-        showMessage('No internet connection', 'error');
-    });
-
-    // Event Listeners
+    // --- Interaction Listeners ---
     if (toastOpacityBtn) {
-        toastOpacityBtn.addEventListener('click', function() {
+        toastOpacityBtn.addEventListener('click', () => {
             chrome.runtime.sendMessage({ action: 'toggleToastOpacity' }, (response) => {
-                if (response && response.success) {
-                    opacityLevelDisplay.textContent = capitalizeFirstLetter(response.level);
-                    showMessage(`Toast opacity: ${capitalizeFirstLetter(response.level)}`, 'success', 2000);
+                if (response?.success) {
+                    opacityLevelDisplay.textContent = capitalize(response.level);
+                    showMessage(`HUD Visibility: ${capitalize(response.level)}`);
                 }
             });
         });
     }
 
-    if (aiProviderSelect) {
-        aiProviderSelect.addEventListener('change', function() {
-            if (this.value === 'custom') {
-                customEndpointGroup.classList.remove('hidden');
-            } else {
-                customEndpointGroup.classList.add('hidden');
-            }
-            clearChatHistoryOnProviderChange();
-            autoSaveAPIConfig();
+    const ssModes = ['OFF', 'MANUAL', 'BLOCK', 'AUTO_BLANK'];
+    if (ssStealthBtn) {
+        ssStealthBtn.addEventListener('click', () => {
+            chrome.storage.local.get({ ssStealthMode: 'MANUAL' }, (prefs) => {
+                const next = ssModes[(ssModes.indexOf(prefs.ssStealthMode) + 1) % ssModes.length];
+                chrome.storage.local.set({ ssStealthMode: next }, () => {
+                    updateUI();
+                    showMessage(`Screen: ${ssModeNames[next]}`);
+                });
+            });
         });
     }
 
-    if (apiKeyInput) apiKeyInput.addEventListener('input', autoSaveAPIConfig);
-    if (customEndpointInput) customEndpointInput.addEventListener('input', autoSaveAPIConfig);
-    if (modelNameInput) modelNameInput.addEventListener('input', autoSaveAPIConfig);
-
-    if (testConnectionBtn) {
-        testConnectionBtn.addEventListener('click', async function() {
-            const apiKey = apiKeyInput.value.trim();
-            const aiProvider = aiProviderSelect.value;
-            const customEndpoint = customEndpointInput.value.trim();
-            const modelName = modelNameInput.value.trim();
-
-            if (!apiKey) {
-                showMessage('Please enter an API key first', 'error', 3000);
-                return;
-            }
-
-            testConnectionBtn.textContent = 'Testing...';
-            testConnectionBtn.disabled = true;
-
-            try {
-                chrome.runtime.sendMessage({
-                    action: 'testCustomAPI',
-                    config: {
-                        aiProvider: aiProvider,
-                        customEndpoint: customEndpoint,
-                        apiKey: apiKey,
-                        modelName: modelName
-                    }
-                }, (response) => {
-                    testConnectionBtn.textContent = 'Test Connection';
-                    testConnectionBtn.disabled = false;
-
-                    if (response && response.success) {
-                        showMessage('Connection successful', 'success', 3000);
-                    } else {
-                        showMessage('Connection failed: ' + (response?.error || 'Unknown error'), 'error', 4000);
-                    }
+    const webcamModes = ['OFF', 'BLOCK', 'STATIC', 'FREEZE'];
+    if (webcamStealthBtn) {
+        webcamStealthBtn.addEventListener('click', () => {
+            chrome.storage.local.get({ webcamStealthMode: 'OFF' }, (prefs) => {
+                const next = webcamModes[(webcamModes.indexOf(prefs.webcamStealthMode) + 1) % webcamModes.length];
+                chrome.storage.local.set({ webcamStealthMode: next }, () => {
+                    updateUI();
+                    showMessage(`Webcam: ${webcamModeNames[next]}`);
                 });
-            } catch (error) {
-                testConnectionBtn.textContent = 'Test Connection';
-                testConnectionBtn.disabled = false;
-                showMessage('Error testing API: ' + error.message, 'error', 4000);
-            }
+            });
+        });
+    }
+
+    const timerModes = ['OFF', 'SLOW', 'PAUSE'];
+    if (timerControlBtn) {
+        timerControlBtn.addEventListener('click', () => {
+            chrome.storage.local.get({ timerMode: 'OFF' }, (prefs) => {
+                const next = timerModes[(timerModes.indexOf(prefs.timerMode) + 1) % timerModes.length];
+                chrome.storage.local.set({ timerMode: next }, () => {
+                    updateUI();
+                    showMessage(`Clock: ${timerModeNames[next]}`);
+                });
+            });
         });
     }
 
     if (uninstallBtn) {
         uninstallBtn.addEventListener('click', async () => {
-            try {
-                if(confirm("Are you sure you want to uninstall ActiType?")) {
-                    await chrome.storage.local.clear();
-                    chrome.management.uninstallSelf();
-                }
-            } catch (error) {
-                console.error('Error during uninstall:', error);
-                showMessage('Error uninstalling extension', 'error');
+            if(confirm("Complete System Purge (Uninstall ActiType)?")) {
+                await chrome.storage.local.clear();
+                chrome.management.uninstallSelf();
             }
         });
     }
+
+    // Listen for storage changes (shortcuts etc)
+    chrome.storage.onChanged.addListener(() => updateUI());
 });
